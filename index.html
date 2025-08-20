@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>solevoy.dolg — Актуальный долг солевого барона</title>
+  <meta name="description" content="Актуальный долг солевого барона — расчёт по ключевой ставке Банка России с ежедневной капитализацией в 12:00." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1f2a'/%3E%3Ctext x='50%25' y='58%25' text-anchor='middle' font-size='44' fill='%2300c853'%3E₽%3C/text%3E%3C/svg%3E">
+  <style>
+    :root{
+      --bg:#0b1216;
+      --panel:#101920;
+      --ink:#e6f0f3;
+      --muted:#9fb1ba;
+      --brand:#00c853;
+      --accent:#1ee592;
+      --danger:#ff5a5f;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, -apple-system, "Apple Color Emoji", "Segoe UI Emoji";
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --ring: 0 0 0 2px rgba(30,229,146,.3), 0 8px 24px rgba(0,200,83,.2);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 800px at 70% -10%, rgba(0,200,83,.10), transparent 60%), var(--bg);
+      color:var(--ink); font-family:var(--sans); letter-spacing:.2px;
+    }
+    .wrap{
+      min-height:100%;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:32px;
+      padding:24px clamp(16px, 3.5vw, 48px);
+    }
+    header{
+      grid-column: 1 / -1;
+      display:flex; align-items:center; justify-content:center;
+      padding:8px 0 10px;
+    }
+    .app-title{
+      font-weight:800; text-align:center; line-height:1.1;
+      letter-spacing:.3px;
+      color:var(--ink);
+      font-size: clamp(22px, 2.4vw + 10px, 44px);
+      text-shadow: 0 2px 0 rgba(0,0,0,.25);
+    }
+    .badge{
+      margin-left:10px; font-size:12px; color:var(--muted);
+      background:rgba(0,200,83,.08); border:1px solid rgba(0,200,83,.25);
+      padding:4px 8px; border-radius:999px;
+    }
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.02), transparent), var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:16px; box-shadow:var(--shadow);
+    }
+    .sidebar{ padding:18px; position:relative }
+    .sidebar h2{ margin:6px 0 12px; font-size:16px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.12em }
+    .kv{ display:grid; grid-template-columns: 1fr auto; gap:10px 12px; margin-bottom:14px}
+    .kv .k{ color:var(--muted) }
+    .kv .v{ font-weight:700 }
+    .rate-row{ display:flex; align-items:center; gap:8px }
+    .rate{ font-weight:800 }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; border-radius:12px; padding:6px 10px;
+      background:#0d1419; border:1px solid rgba(255,255,255,.06); color:var(--muted); font-size:12px
+    }
+    .btn{
+      cursor:pointer; user-select:none; border:none; font-weight:700;
+      padding:8px 12px; border-radius:10px; background:var(--brand); color:#04130b;
+      box-shadow:var(--ring); transition: transform .04s ease;
+    }
+    .btn:active{ transform: translateY(1px) }
+    .linkish{ text-decoration:none; color:var(--accent); border-bottom:1px dashed rgba(30,229,146,.5) }
+    .main{
+      display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+    }
+    .card{
+      width:min(940px, 95%); margin:0 auto; padding:28px 28px 34px;
+      display:flex; flex-direction:column; align-items:center; gap:14px;
+    }
+    .ticker{
+      font-family:var(--mono); font-weight:900;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(42px, 5vw + 22px, 100px);
+      letter-spacing: -1px;
+      line-height:1;
+      background: linear-gradient(180deg, #e9fff3, #b2ffd7 55%, #7bffc0);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      text-shadow: 0 12px 30px rgba(0, 200, 83, .2);
+    }
+    .sub{
+      color:var(--muted); font-size:14px; text-align:center
+    }
+    .countdown{ margin-top:6px; font-size:13px; color:var(--muted) }
+    .foot{
+      margin-top:10px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; color:var(--muted); font-size:12px
+    }
+    .muted{ color:var(--muted) }
+    .ok{ color:var(--accent) }
+    .warn{ color:var(--danger) }
+    .field{
+      display:flex; gap:8px; margin-top:8px;
+    }
+    .field input{
+      flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.08);
+      background:#0b1318; color:var(--ink); font-weight:700
+    }
+    .hint{ font-size:12px; color:var(--muted); margin-top:4px }
+    .brandline{
+      position:absolute; inset:0; pointer-events:none;
+      background:
+        radial-gradient(500px 120px at 50% 0%, rgba(0,200,83,.10), transparent 70%),
+        radial-gradient(600px 140px at 50% 100%, rgba(0,200,83,.08), transparent 60%);
+      opacity:.7;
+    }
+    @media (max-width: 900px){
+      .wrap{ grid-template-columns: 1fr; }
+      .sidebar{ order:2 }
+      .main{ order:1 }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="app-title">Актуальный долг солевого барона</div>
+      <span class="badge">solevoy.dolg</span>
+    </header>
+
+    <!-- ЛЕВАЯ ПАНЕЛЬ -->
+    <aside class="sidebar panel">
+      <h2>Параметры</h2>
+      <div class="kv">
+        <div class="k">Первоначальная сумма долга</div>
+        <div class="v" id="base-amount">4 000 ₽</div>
+
+        <div class="k">Дата отсчёта</div>
+        <div class="v" id="start-date">17.02.2025</div>
+
+        <div class="k">Дней прошло с 17.02.2025</div>
+        <div class="v" id="days-since">—</div>
+
+        <div class="k">Актуальная ключевая ставка ЦБ РФ</div>
+        <div class="v rate-row">
+          <span class="rate" id="key-rate">загрузка…</span>
+          <span class="pill" id="rate-status">Подгружаем</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <input type="number" inputmode="decimal" step="0.01" min="0" id="manual-rate" placeholder="Ввести ставку вручную, %">
+        <button class="btn" id="apply-manual">Применить</button>
+      </div>
+      <div class="hint">Если авто-обновление ставки недоступно, введите текущую ключевую ставку (в процентах годовых) и нажмите «Применить».</div>
+
+      <div class="hint" style="margin-top:10px">
+        Режим начисления: <b>один раз в день</b> в 12:00 (временная зона вашего устройства), <b>ежедневная капитализация</b> по формуле <code>P × (1 + r/365)</code>.
+      </div>
+    </aside>
+
+    <!-- ЦЕНТРАЛЬНЫЙ БЛОК -->
+    <main class="main panel">
+      <div class="brandline"></div>
+      <div class="card">
+        <div id="amount" class="ticker">—</div>
+        <div class="sub">
+          Следующее обновление в <span id="noon-label">12:00</span>. 
+          <div class="countdown" id="countdown">—</div>
+        </div>
+        <div class="foot">
+          <span class="muted">Расчёт не является финансовой консультацией.</span>
+          <span>Источник ставки: <a class="linkish" href="https://www.cbr.ru/" target="_blank" rel="noopener">Банк России</a></span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // === Константы ===
+    const START_DATE_LOCAL_NOON = new Date(2025, 1, 17, 12, 0, 0); // 17.02.2025 12:00 (месяцы с 0)
+    const BASE_AMOUNT = 4000;
+    const LS_KEY = 'solevoydolg.v1';
+    const DEFAULT_RATE_FALLBACK = 16.00; // % годовых — на случай полной недоступности сети (можете сменить)
+    const NOON_HOUR = 12;
+
+    // === Состояние ===
+    const state = {
+      keyRate: null,       // годовая, %
+      lastFetchISO: null,  // когда последний раз дергали сеть
+    };
+
+    // === Утилиты ===
+    const fmtMoney = (n) =>
+      n.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 2 });
+
+    const daysBetweenNoons = (fromNoon, now) => {
+      // Считает, сколько 12:00 прошло с момента "fromNoon" до текущего времени
+      // Округляем к полуночному рубежу 12:00 каждый календарный день
+      const d0 = new Date(fromNoon);
+      const d1 = new Date(now);
+
+      // Сколько целых суток прошло
+      const msPerDay = 24*60*60*1000;
+      // Привязка к "окну" 12:00: если сейчас до 12:00, за текущий день ещё не начисляем
+      const noonToday = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate(), NOON_HOUR, 0, 0);
+      let effectiveNow = d1 >= noonToday ? noonToday : new Date(noonToday.getTime() - msPerDay);
+
+      // Количество прошедших дней = число дневных границ 12:00
+      const diff = Math.floor((effectiveNow - d0) / msPerDay);
+      return Math.max(0, diff);
+    };
+
+    const countDaysSinceStartCalendar = (now) => {
+      // Просто календарная разница между полуночами (для отображения "дней прошло")
+      const startMidnight = new Date(2025, 1, 17, 0, 0, 0);
+      const msPerDay = 24*60*60*1000;
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diff = Math.floor((todayMidnight - startMidnight) / msPerDay);
+      return Math.max(0, diff);
+    };
+
+    const computeAmount = (base, annualRatePct, days) => {
+      const daily = annualRatePct / 100 / 365;
+      // Ежедневная капитализация один раз в день в 12:00:
+      return base * Math.pow(1 + daily, days);
+    };
+
+    const saveLS = () => {
+      try {
+        localStorage.setItem(LS_KEY, JSON.stringify(state));
+      } catch(e){}
+    };
+    const loadLS = () => {
+      try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (typeof obj.keyRate === 'number') state.keyRate = obj.keyRate;
+          if (typeof obj.lastFetchISO === 'string') state.lastFetchISO = obj.lastFetchISO;
+        }
+      } catch(e){}
+    };
+
+    // === Работа со ставкой ===
+    async function fetchKeyRate() {
+      // Пробуем несколько источников по очереди (на случай CORS)
+      const candidates = [
+        // 1) Простой "прокси" на gist/raw (можно заменить своим JSON на сервере)
+        // Ожидаемый формат: { "key_rate": 16.00, "as_of": "2025-08-01" }
+        "https://raw.githubusercontent.com/iamkun/dayjs/master/package.json", // заглушка для проверки CORS
+        // 2) Официальный сайт ЦБ (скорее всего CORS не даст): показываем как попытку
+        "https://www.cbr.ru/KeyRate/KeyRate.csv",
+      ];
+
+      let ok = false, rate = null, source = null;
+
+      // Попытка 1: ваш собственный JSON (здесь демонстрационная заглушка — всегда не подходит)
+      // Сразу перейдем к фоллбеку ниже, чтобы не вводить в заблуждение
+      // В реальной эксплуатации замените на ваш endpoint, который возвращает JSON с полем key_rate
+
+      // Поскольку гарантированного публичного JSON без CORS нет, используем фоллбек
+      rate = state.keyRate ?? DEFAULT_RATE_FALLBACK;
+      source = 'ручной ввод / значение по умолчанию';
+      updateRateUI(rate, source, false);
+      return rate;
+    }
+
+    function updateRateUI(rate, source, fetched=true){
+      const rateEl = document.getElementById('key-rate');
+      const statusEl = document.getElementById('rate-status');
+      rateEl.textContent = `${(rate ?? DEFAULT_RATE_FALLBACK).toFixed(2)}%`;
+      if (fetched) {
+        statusEl.textContent = 'Обновлено из сети';
+        statusEl.style.borderColor = 'rgba(0,200,83,.45)';
+        statusEl.style.background = 'rgba(0,200,83,.08)';
+        statusEl.style.color = '#9ff3cf';
+      } else {
+        statusEl.textContent = (source && source.includes('ручной')) ? 'Ручной режим' : 'Значение по умолчанию';
+        statusEl.style.borderColor = 'rgba(255,255,255,.15)';
+        statusEl.style.background = '#0d1419';
+        statusEl.style.color = '#cbd7dd';
+      }
+    }
+
+    function updateAll() {
+      const now = new Date();
+      const daysAccrued = daysBetweenNoons(START_DATE_LOCAL_NOON, now);
+      const daysSince = countDaysSinceStartCalendar(now);
+
+      const rate = (state.keyRate ?? DEFAULT_RATE_FALLBACK);
+      const amount = computeAmount(BASE_AMOUNT, rate, daysAccrued);
+
+      document.getElementById('days-since').textContent = daysSince.toString();
+      document.getElementById('amount').textContent = fmtMoney(amount);
+
+      // Обновим подпись до следующего 12:00
+      updateCountdown(now);
+    }
+
+    function nextNoonFrom(now){
+      const noonToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), NOON_HOUR, 0, 0);
+      return (now < noonToday) ? noonToday : new Date(noonToday.getTime() + 24*60*60*1000);
+    }
+
+    function updateCountdown(now=new Date()){
+      const target = nextNoonFrom(now);
+      const ms = target - now;
+      const sec = Math.max(0, Math.floor(ms/1000));
+      const hrs = Math.floor(sec/3600);
+      const mins = Math.floor((sec%3600)/60);
+      const s = sec%60;
+      document.getElementById('countdown').textContent =
+        `${hrs.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    }
+
+    // === Инициализация ===
+    (function init(){
+      loadLS();
+
+      // UI статический
+      document.getElementById('base-amount').textContent = fmtMoney(BASE_AMOUNT);
+      document.getElementById('start-date').textContent = '17.02.2025';
+      document.getElementById('noon-label').textContent = `${NOON_HOUR.toString().padStart(2,'0')}:00`;
+
+      // Пробуем подтянуть ставку (см. комментарий внутри fetchKeyRate)
+      fetchKeyRate().then(rate => {
+        if (typeof rate === 'number') {
+          state.keyRate = rate;
+          state.lastFetchISO = new Date().toISOString();
+          saveLS();
+        }
+        updateAll();
+      }).catch(() => {
+        // Полный фоллбек
+        state.keyRate = state.keyRate ?? DEFAULT_RATE_FALLBACK;
+        updateRateUI(state.keyRate, null, false);
+        updateAll();
+      });
+
+      // Ручной ввод ставки
+      document.getElementById('apply-manual').addEventListener('click', () => {
+        const v = parseFloat(document.getElementById('manual-rate').value.replace(',', '.'));
+        if (isFinite(v) && v >= 0) {
+          state.keyRate = v;
+          state.lastFetchISO = new Date().toISOString();
+          saveLS();
+          updateRateUI(state.keyRate, 'ручной ввод', false);
+          updateAll();
+        } else {
+          alert('Введите корректное число (проценты годовых).');
+        }
+      });
+
+      // Тики — обновление таймера и суммы каждую секунду
+      setInterval(() => {
+        updateAll();
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
