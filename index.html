@@ -11,7 +11,7 @@
   body {
     margin: 0;
     font-family: 'Arial', sans-serif;
-    background: #0c0d14; /* темный фон */
+    background: #0c0d14;
     color: #f0f0f0;
     display: flex;
     flex-direction: column;
@@ -20,13 +20,13 @@
 
   header {
     text-align: center;
-    padding: 20px 0;
+    padding: 15px 0;
     background: linear-gradient(90deg, #1a1c2b, #22273a);
     font-family: 'Roboto Slab', serif;
-    font-size: 3.5vw;
+    font-size: 4vw;
     font-weight: bold;
     color: #fff8b0;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     border-bottom: 2px solid #444;
     text-shadow: 1px 1px 2px #000;
   }
@@ -34,18 +34,19 @@
   .main {
     display: flex;
     flex: 1;
+    flex-direction: row;
   }
 
   .info {
     background-color: #121426;
-    padding: 50px 40px;
-    width: 400px;
+    padding: 40px 20px;
+    width: 300px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 20px;
+    gap: 15px;
     font-family: 'Georgia', serif;
-    font-size: 1.3rem;
+    font-size: 1rem;
     border-right: 2px solid #333;
   }
 
@@ -66,21 +67,22 @@
     justify-content: center;
     align-items: center;
     background: linear-gradient(180deg, #121426, #1a1c2b);
+    padding: 20px;
   }
 
   .debt {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 12vw;
+    font-size: 10vw;
     font-weight: bold;
     color: #00e0ff;
     text-align: center;
     margin-bottom: 20px;
-    text-shadow: none; /* убрали размытую тень для четкости */
+    text-shadow: none;
   }
 
   .timer {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 2.5vw;
+    font-size: 3vw;
     color: #00ff99;
     background-color: #0d0f1b;
     padding: 8px 20px;
@@ -91,7 +93,7 @@
 
   .link {
     text-align: center;
-    padding: 15px 0;
+    padding: 10px 0;
     background: #121426;
     border-top: 2px solid #333;
   }
@@ -101,6 +103,30 @@
     text-decoration: none;
     font-weight: bold;
     font-size: 1.2rem;
+  }
+
+  /* Адаптив для мобильных */
+  @media (max-width: 768px) {
+    .main {
+      flex-direction: column;
+    }
+
+    .info {
+      width: 100%;
+      font-size: 0.9rem;
+      padding: 20px 15px;
+      border-right: none;
+      border-bottom: 2px solid #333;
+    }
+
+    .debt {
+      font-size: 18vw;
+    }
+
+    .timer {
+      font-size: 5vw;
+      padding: 10px 25px;
+    }
   }
 </style>
 </head>
