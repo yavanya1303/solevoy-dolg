@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Актуальный долг солевого барона</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&display=swap');
+
+  body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: #0c0d14; /* темный фон */
+    color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    padding: 20px 0;
+    background: linear-gradient(90deg, #1a1c2b, #22273a);
+    font-family: 'Roboto Slab', serif;
+    font-size: 3.5vw;
+    font-weight: bold;
+    color: #fff8b0;
+    letter-spacing: 2px;
+    border-bottom: 2px solid #444;
+    text-shadow: 1px 1px 2px #000;
+  }
+
+  .main {
+    display: flex;
+    flex: 1;
+  }
+
+  .info {
+    background-color: #121426;
+    padding: 50px 40px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    font-family: 'Georgia', serif;
+    font-size: 1.3rem;
+    border-right: 2px solid #333;
+  }
+
+  .info p {
+    margin: 0;
+    border-bottom: 1px dashed #444;
+    padding-bottom: 5px;
+  }
+
+  .info strong {
+    color: #ffd700;
+  }
+
+  .debt-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(180deg, #121426, #1a1c2b);
+  }
+
+  .debt {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12vw;
+    font-weight: bold;
+    color: #00e0ff;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: none; /* убрали размытую тень для четкости */
+  }
+
+  .timer {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 2.5vw;
+    color: #00ff99;
+    background-color: #0d0f1b;
+    padding: 8px 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,255,153,0.5);
+    text-align: center;
+  }
+
+  .link {
+    text-align: center;
+    padding: 15px 0;
+    background: #121426;
+    border-top: 2px solid #333;
+  }
+
+  .link a {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+</style>
+</head>
+<body>
+
+<header>Актуальный долг солевого барона</header>
+
+<div class="main">
+  <div class="info">
+    <p>Первоначальная сумма долга: <strong id="initialDebt">4000</strong> руб.</p>
+    <p>Дата: <strong id="startDate">17.02.2025</strong></p>
+    <p>Количество дней, прошедших с даты: <strong id="daysPassed"></strong></p>
+    <p>Ключевая ставка Банка России: <strong id="rate">18%</strong></p>
+  </div>
+  <div class="debt-container">
+    <div class="debt" id="currentDebt">0 руб.</div>
+    <div class="timer" id="timer">00:00:00 до следующего обновления</div>
+  </div>
+</div>
+
+<div class="link">
+  <a href="#">solevoy.dolg</a>
+</div>
+
+<script>
+const initialDebt = 4000;
+const startDate = new Date('2025-02-17T00:00:00');
+const annualRate = 0.18;
+
+function updateDebt() {
+  const now = new Date();
+  const daysPassed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+  document.getElementById('daysPassed').textContent = daysPassed;
+
+  const dailyRate = annualRate / 365;
+  const currentDebt = initialDebt * Math.pow(1 + dailyRate, daysPassed);
+  document.getElementById('currentDebt').textContent = Math.round(currentDebt) + ' руб.';
+
+  updateTimer(now);
+}
+
+function updateTimer(now) {
+  let nextUpdate = new Date(now);
+  nextUpdate.setHours(12,0,0,0);
+  if (now >= nextUpdate) nextUpdate.setDate(nextUpdate.getDate() + 1);
+  const diff = nextUpdate - now;
+  const hours = String(Math.floor(diff / (1000*60*60))).padStart(2,'0');
+  const minutes = String(Math.floor((diff % (1000*60*60)) / (1000*60))).padStart(2,'0');
+  const seconds = String(Math.floor((diff % (1000*60)) / 1000)).padStart(2,'0');
+  document.getElementById('timer').textContent = `${hours}:${minutes}:${seconds} до следующего обновления`;
+}
+
+updateDebt();
+setInterval(updateDebt, 1000);
+</script>
+
+</body>
+</html>
